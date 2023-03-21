@@ -7,19 +7,82 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r}
+activity <- read.csv("activity/activity.csv")
 
+intervals <- activity$interval
+for(i in 1:length(intervals)) {
+    activity$interval[i] <- paste(strrep(0, times = 4 - nchar(intervals[i])), intervals[i], sep = "")
+}
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r}
+# adding up all steps for each day
+steps_per_day <- with(activity, tapply(steps, date, sum, na.rm = TRUE))
 
+hist(steps_per_day, xlab = "Total number of steps per day", main = "Histogram of the total number of steps per day", breaks = 10)
+
+print(paste("Median:", median(steps_per_day)))
+sprintf("Mean: %.2f", mean(steps_per_day))
+```
 
 
 ## What is the average daily activity pattern?
+```{r}
+# averaging the steps for each interval
+steps_per_interval <- with(activity, tapply(steps, interval, mean, na.rm = TRUE))
 
+# create time objects out of the interval attribute
+times <- as.POSIXlt(names(steps_per_interval), format = "%H%M")
+
+plot(times, steps_per_interval, type = "l", xlab = "5 minute interval", ylab = "Average number of steps", main = "Average daily activity")
+
+max_steps_interval <- times[which.max(steps_per_interval)]
+max_steps <- max(steps_per_interval)
+
+print(paste("The interval at ",
+            max_steps_interval$hour, ":", max_steps_interval$min,
+            " o'clock contains the most steps on average.", sep = ""))
+sprintf("These are %.2f steps.", max_steps)
+```
 
 
 ## Imputing missing values
 
+```{r}
+print(paste("There are in total", sum(is.na(activity$steps)), "missing values."))
+```
 
+To impute the missing values, we choose the mean of the corresponding 5 minute interval,
+as computed in the plot above.
+
+```{r}
+activity_imputed <- activity
+
+for(i in 1:nrow(activity)) {
+    if(is.na(activity[i, "steps"])) {
+        activity_imputed[i, "steps"] <- steps_per_interval[names(steps_per_interval) == activity[i, "interval"]]
+    }
+}
+```
+
+```{r}
+# adding up all steps for each day
+steps_per_day <- with(activity_imputed, tapply(steps, date, sum, na.rm = TRUE))
+
+hist(steps_per_day, xlab = "Total number of steps per day", main = "Histogram of the total number of steps per day", breaks = 10)
+
+print(paste("Median:", median(steps_per_day)))
+sprintf("Mean: %.2f", mean(steps_per_day))
+```
+
+We see that
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+
+```
+
