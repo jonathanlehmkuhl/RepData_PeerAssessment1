@@ -7,7 +7,8 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r}
+
+```r
 activity <- read.csv("activity/activity.csv")
 
 # normalizing the interval codes to four digits, so that they can later be transformed
@@ -20,19 +21,36 @@ for(i in 1:length(intervals)) {
 
 
 ## What is mean total number of steps taken per day?
-```{r}
+
+```r
 # adding up all steps for each day
 steps_per_day <- with(activity, tapply(steps, date, sum, na.rm = TRUE))
 
 hist(steps_per_day, xlab = "Total number of steps per day", main = "Histogram of the total number of steps per day", breaks = 10)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+```r
 print(paste("Median:", median(steps_per_day)))
+```
+
+```
+## [1] "Median: 10395"
+```
+
+```r
 sprintf("Mean: %.2f", mean(steps_per_day))
+```
+
+```
+## [1] "Mean: 9354.23"
 ```
 
 
 ## What is the average daily activity pattern?
-```{r}
+
+```r
 # averaging the steps for each interval
 steps_per_interval <- with(activity, tapply(steps, interval, mean, na.rm = TRUE))
 
@@ -40,27 +58,48 @@ steps_per_interval <- with(activity, tapply(steps, interval, mean, na.rm = TRUE)
 times <- as.POSIXlt(names(steps_per_interval), format = "%H%M")
 
 plot(times, steps_per_interval, type = "l", xlab = "5 minute interval", ylab = "Average number of steps", main = "Average daily activity")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+```r
 max_steps_interval <- times[which.max(steps_per_interval)]
 max_steps <- max(steps_per_interval)
 
 print(paste("The interval at ",
             max_steps_interval$hour, ":", max_steps_interval$min,
             " o'clock contains the most steps on average.", sep = ""))
+```
+
+```
+## [1] "The interval at 8:35 o'clock contains the most steps on average."
+```
+
+```r
 sprintf("These are %.2f steps.", max_steps)
+```
+
+```
+## [1] "These are 206.17 steps."
 ```
 
 
 ## Imputing missing values
 
-```{r}
+
+```r
 print(paste("There are in total", sum(is.na(activity$steps)), "missing values."))
+```
+
+```
+## [1] "There are in total 2304 missing values."
 ```
 
 To impute the missing values, we choose the mean of the corresponding 5 minute interval,
 as computed in the plot above. We create the new dataset *activity_imputed*.
 
-```{r}
+
+```r
 activity_imputed <- activity
 
 for(i in 1:nrow(activity)) {
@@ -70,14 +109,30 @@ for(i in 1:nrow(activity)) {
 }
 ```
 
-```{r}
+
+```r
 # adding up all steps for each day
 steps_per_day_imputed <- with(activity_imputed, tapply(steps, date, sum, na.rm = TRUE))
 
 hist(steps_per_day_imputed, xlab = "Total number of steps per day", main = "Histogram of the total number of steps per day", breaks = 10)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+```r
 print(paste("Median:", median(steps_per_day_imputed)))
+```
+
+```
+## [1] "Median: 10766.1886792453"
+```
+
+```r
 sprintf("Mean: %.10f", mean(steps_per_day_imputed))
+```
+
+```
+## [1] "Mean: 10766.1886792453"
 ```
 
 We see that in the histogram using the imputed data the bar that corresponds to approximately 1000 to 1200 steps is much higher. The bar left to it also grew significantly. On the other hand, the first bar got reduced by approximately 75%. Since we added steps to each day or kept it the same, it makes sense that the new histogram is skewed to the right compared with the old one. That the bars around the average steps per day grew significantly can be explained by using the average steps per interval to impute the missing values.
@@ -86,7 +141,8 @@ This change also reflects in mean and median, since both values grew. It is also
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
+
+```r
 suppressMessages(library(dplyr))
 
 # converting the date column to POSIXlt objects
@@ -105,14 +161,24 @@ for(i in 1:nrow(activity_imputed)) {
 activity_imputed <- mutate(activity_imputed, day = factor(day))
 ```
 
-```{r}
+
+```r
 library(lattice)
 
 # averaging the steps for each interval
 df <- activity_imputed %>% group_by(interval, day) %>% summarize(steps_per_interval_and_wday = mean(steps))
+```
 
+```
+## `summarise()` has grouped output by 'interval'. You can override using the
+## `.groups` argument.
+```
+
+```r
 df$interval <- as.integer(df$interval)
 
 xyplot(steps_per_interval_and_wday ~ interval | day, data = df, type = "l", layout = c(1,2), xlab = "5 minute interval", ylab = "Average number of steps", main = "Activity patterns at weekdays and weekends")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
